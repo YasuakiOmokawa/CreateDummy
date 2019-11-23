@@ -5,14 +5,60 @@ use utf8;
 use Data::Dumper;
 
 use CreateDummy::SMTPResCode;
+use CreateDummy::Answer;
+use CreateDummy::LoginId;
+use CreateDummy::Datetime;
 
-my $smtp = CreateDummy::SMTPResCode->new;
-for my $i (1..7000000) {
-  $smtp->get;
-  # print "smtp code -> " . $smtp->get . "\n";
+my $datetime = CreateDummy::Datetime->new;
+
+my $time1 = time;
+
+
+my $time2 = time;
+my $process_time = $time2 - $time1;
+print "exec time -> " . $process_time . "\n";
+__END__
+
+for my $i (1..7_000_000) {
+  print "date -> ". $datetime->get . "\n";
 }
 
-__END__
+# my $smtp = CreateDummy::SMTPResCode->new;
+# my $answer = CreateDummy::Answer->new;
+my $login = CreateDummy::LoginId->new(
+  number => 7000000,
+);
+my $time1 = time;
+
+$login->create;
+
+my $nums = keys %{$login->{ids}};
+print "nums -> " . $nums . "\n";
+
+print "id -> " . $login->get . "\n";
+$nums = keys %{$login->{ids}};
+print "nums -> " . $nums . "\n";
+
+print "id -> " . $login->get . "\n";
+$nums = keys %{$login->{ids}};
+print "nums -> " . $nums . "\n";
+
+my $time2 = time;
+my $process_time = $time2 - $time1;
+print "exec time -> " . $process_time . "\n";
+
+
+# my $smtp = CreateDummy::SMTPResCode->new;
+my $answer = CreateDummy::Answer->new;
+my $time1 = time;
+for my $i (1..100000) {
+  $answer->get;
+  # print "answer -> " . $answer->get . "\n";
+  # print "smtp code -> " . $smtp->get . "\n";
+}
+my $time2 = time;
+my $process_time = $time2 - $time1;
+print "exec time -> " . $process_time . "\n";
 
 use CreateDummy::CreateEmail;
 
