@@ -20,7 +20,7 @@ sub new {
     email => CreateDummy::Email->new(number => $params{number}),
     smtp => CreateDummy::SMTPResCode->new,
     datetime => CreateDummy::Datetime->new,
-    login_name => CreateDummy::LoginId->new(number => $params{number}),
+    login_name => CreateDummy::LoginId->new,
     answer => CreateDummy::Answer->new,
   }, $class;
 }
@@ -30,7 +30,6 @@ sub setup {
 
   # 一意なデータを生成
   $self->{email}->create;
-  $self->{login_name}->create;
 }
 
 sub create {
