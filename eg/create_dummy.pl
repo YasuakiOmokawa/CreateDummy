@@ -14,25 +14,43 @@ eval {
 
   my $file = "$dir/output_$$.csv";
   if (-e "$file") {
-    die "$file は存在します。\n";
+    die "$file is exist\n";
   }
 
   # ファイルオープン
   open my $fh, ">", $file
     or die "File open error : $!";
 
-  # 書き込み（シングル : 13secくらい）
+  # 書き込み
   binmode $fh;
   my $size = 0;
+  my $counter = 0;
+
   my $limit = 1024 * 1024 * 1024;
+  my $row_numbers = int(($limit / 157) * 1.1);
+
+  my $dummy = CreateDummy->new(
+    number => $row_numbers,
+  );
+
+  $dummy->setup;
+
   while ($size < $limit) {
-    my $string = join(",", create_data()) . "\n";
+    my $string = $dummy->create;
     print $fh $string;
     $size += length $string;
+    $counter++;
   }
 
   # ファイルクローズ
   close $fh;
+
+  print "\n";
+  print "predicted data size -> " . $limit . "\n";
+  print "predicted row numbers -> " . $row_numbers . "\n";
+  print "--------------------------\n";
+  print "result data size -> " . $size . "\n";
+  print "result row count -> " . $counter . "\n";
 
   # 実行時間出力
   my $end_time = time;
