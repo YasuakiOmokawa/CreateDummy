@@ -27,7 +27,7 @@ eval {
   my $counter = 0;
 
   my $limit = 1024 * 1024 * 1024;
-  my $row_numbers = int(($limit / 157) * 1.1);
+  my $row_numbers = int($limit / 160);
 
   my $dummy = CreateDummy->new(
     number => $row_numbers,
