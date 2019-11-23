@@ -12,6 +12,7 @@ sub new {
     number => $params{number},
     domains => {},
     addresses => {},
+    sr => String::Random->new(),
   }, $class;
 }
 
@@ -19,44 +20,28 @@ sub create {
   my ($self) = @_;
 
   $self->_setup_domains;
-  $self->_setup_addresses;
 }
 
 sub get {
   my ($self) = @_;
 
-  my ($k, $v) = each %{$self->{addresses}};
+  #  英小文字8 ~ 12桁の重複なしランダム文字列を生成
+  my $str = $self->{sr}->randregex('[a-z]{8,12}');
 
-  delete $self->{addresses}{$k};
+  while(1) {
+    my ($k, $v) = each %{$self->{domains}};
 
-  return $v;
-}
-
-sub _setup_addresses {
-  my ($self) = @_;
-
-  my $sr = String::Random->new();
-
-  for my $k (keys %{$self->{domains}}) {
-
-    for my $nums (1..$self->{domains}{$k}) {
-
-      my $str = "";
-
-      #  英小文字8 ~ 12桁の重複なしランダム文字列を生成
-      while(1) {
-        $str = $sr->randregex('[a-z]{8,12}');
-
-        # 生成した文字列が一意である場合は文字列を格納
-        unless (exists $self->{addresses}{$str}) {
-          $self->{addresses}{$str} = "";
-          last;
-        }
+    if ($k) {
+      if ($v > 0) {
+        # ドメイン作成上限を一つ減らす
+        $self->{domains}{$k}--;
+        return $str . '@' . $k; # Emailアドレス
+      } else {
+        # 作成上限を超えたドメインは削除
+        delete $self->{domains}{$k};
+        next;
       }
-
-      # Emailアドレス（生成した文字列 + @ + ドメイン格納ハッシュのキー）を格納
-      $self->{addresses}{$str} = $str . '@' . $k;
-      # print "address count ${nums} -> $self->{addresses}{$str}\n";
+      print "domain -> ${k}, number -> ${v}\n";
     }
   }
 }
