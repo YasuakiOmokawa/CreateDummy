@@ -4,15 +4,44 @@ use utf8;
 
 use Data::Dumper;
 
-use CreateDummy::SMTPResCode;
-use CreateDummy::Answer;
-use CreateDummy::LoginId;
-use CreateDummy::Datetime;
+# use CreateDummy::Email;
+# use CreateDummy::SMTPResCode;
+# use CreateDummy::Datetime;
+# use CreateDummy::LoginId;
+# use CreateDummy::Answer;
 
-my $datetime = CreateDummy::Datetime->new;
+use CreateDummy;
+
+my $limit = 1024*1024*1024;
+my $row_numbers = int(($limit / 157) * 1.1);
+print "predicate data size -> " . $limit . "\n";
+print "predicate row numbers -> " . $row_numbers . "\n";
+
+sleep 5;
 
 my $time1 = time;
 
+my $dummy = CreateDummy->new(
+  number => $row_numbers,
+);
+
+$dummy->setup;
+
+my $size = 0;
+my $counter = 0;
+while ($limit > $size) {
+  my $str = $dummy->create;
+  print "data -> " . $str;
+  $size += length $str;
+  $counter++;
+}
+
+print "\n";
+print "predicted data size -> " . $limit . "\n";
+print "predicted row numbers -> " . $row_numbers . "\n";
+print "--------------------------\n";
+print "result data size -> " . $size . "\n";
+print "result row count -> " . $counter . "\n";
 
 my $time2 = time;
 my $process_time = $time2 - $time1;

@@ -1,4 +1,4 @@
-package CreateDummy::CreateEmail;
+package CreateDummy::Email;
 use strict;
 use warnings;
 use utf8;
@@ -56,7 +56,7 @@ sub _setup_addresses {
 
       # Emailアドレス（生成した文字列 + @ + ドメイン格納ハッシュのキー）を格納
       $self->{addresses}{$str} = $str . '@' . $k;
-      print "address count ${nums} -> $self->{addresses}{$str}\n";
+      # print "address count ${nums} -> $self->{addresses}{$str}\n";
     }
   }
 }

@@ -3,21 +3,7 @@ use warnings;
 use utf8;
 
 use Data::Dumper;
-
-sub create_data {
-
-  # csvレコード作成
-  my $id = 1;
-  my $email = 'djskalda@ymir.co.jp';
-  my $smtp_res = 200;
-  my $datetime = '2012/07/01 19:00:00';
-  my $login_name = 'btnaqd';
-  my $answer = 'q9ldgwdr147lf2j6g0wsfl9oubeyt5bnomfc3xy09zx0aks81hn6dck993f6lwingho88xd56fp9pdec8f2oilbj32lrqxv1yekr';
-
-  my @csv_data = ($id, $email, $smtp_res, $datetime, $login_name, $answer);
-
-  return @csv_data;
-}
+use CreateDummy;
 
 # main処理
 eval {
