@@ -89,7 +89,7 @@ sub _setup_domains {
       }
     }
     # 生成されるアドレスの個数を決定
-    my $num = int(rand 90) + 10;
+    my $num = int(rand 91) + 10;
     $self->{domains}{$domain} = $num;
 
     # 生成数の限界を超えたら終了
