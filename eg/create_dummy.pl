@@ -26,17 +26,20 @@ eval {
   my $size = 0;
   my $counter = 0;
 
-  my $limit = 1024 * 1024 * 1024;
-  my $row_numbers = int($limit / 160);
+  # 作成したいファイルサイズ
+  my $limit_size = ARGV[0];
+
+  # 作成予定行数。重複がいくつかあることを想定し、実際の行数より少し多めにする
+  my $row_numbers = int($limit_size / 160);
 
   my $dummy = CreateDummy->new(
     number => $row_numbers,
   );
 
-  $dummy->setup;
+  $dummy->create;
 
-  while ($size < $limit) {
-    my $string = $dummy->create;
+  while ($size < $limit_size) {
+    my $string = $dummy->get;
     print $fh $string;
     $size += length $string;
     $counter++;
@@ -46,7 +49,7 @@ eval {
   close $fh;
 
   print "\n";
-  print "predicted data size -> " . $limit . "\n";
+  print "predicted data size -> " . $limit_size . "\n";
   print "predicted row numbers -> " . $row_numbers . "\n";
   print "--------------------------\n";
   print "result data size -> " . $size . "\n";
