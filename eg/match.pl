@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use utf8;
 
-use Data::Dumper;
 use Tie::File;
 use FindBin;
 use File::Path 'mkpath';
@@ -28,10 +27,10 @@ eval {
     or die "File open error : $!";
 
   # 読み込みファイルオープン
-  my $obj1 = tie(my @array1, 'Tie::File', $file1, memory => 10_000_000) # 読み込みキャッシュ変更
+  my $obj1 = tie(my @array1, 'Tie::File', $file1, memory => 20_000_000) # 読み込みキャッシュbyte変更
     or die "File tie error : $!";
 
-  my $obj2 = tie(my @array2, 'Tie::File', $file2, memory => 10_000_000) # 読み込みキャッシュ変更
+  my $obj2 = tie(my @array2, 'Tie::File', $file2, memory => 20_000_000) # 読み込みキャッシュbyte変更
     or die "File tie error : $!";
 
   # 読み込みファイルの行数
@@ -42,7 +41,7 @@ eval {
   my $batch_size = 500_000;
 
   # 余白サイズ
-  my $safe_space2 = 500;
+  my $safe_space2 = 100;
   my $safe_space1 = $safe_space2 * 2;
 
   # 走査ポインタ(内部表用) ※0が1行目！
@@ -74,7 +73,7 @@ eval {
       my ($id, $email, $smtp, $datetime, $login_id2) = split /,/, $line2;
 
       $hash{$login_id2} = $i;
-      print "inner table now row num -> $i\n";
+      print "inner table setup, now row num -> $i\n";
 
       # ファイルの行数を超えたらループを抜ける
       if ($i >= $row_size2) {
@@ -91,9 +90,8 @@ eval {
 
       # 一致したら書きだす
       if (exists $hash{$login_id1}) {
-        print $o_fh $line1 . "\n";
-        print $o_fh $obj2->FETCH($hash{$login_id1}) . "\n";
-        print $o_fh "---------------------\n";
+        print $o_fh "file1," . $line1 . "\n";
+        print $o_fh "file2," . $obj2->FETCH($hash{$login_id1}) . "\n";
         print "match record number -> ${i}, login id -> $login_id1\n";
         $counter++;
       }
