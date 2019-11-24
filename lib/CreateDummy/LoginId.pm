@@ -7,7 +7,6 @@ use Carp 'croak';
 use FindBin;
 use File::Path 'mkpath';
 use String::Random;
-use Data::Dumper;
 
 sub new {
   my ($class, %params) = @_;

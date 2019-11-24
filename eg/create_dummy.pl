@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use utf8;
 
-use Data::Dumper;
 use CreateDummy;
 
 # main処理

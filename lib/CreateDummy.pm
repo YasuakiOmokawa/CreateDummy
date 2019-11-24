@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use utf8;
 
-use Data::Dumper;
-
 use CreateDummy::Email;
 use CreateDummy::SMTPResCode;
 use CreateDummy::Datetime;
