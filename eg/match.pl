@@ -6,7 +6,6 @@ use Data::Dumper;
 use Tie::File;
 use FindBin;
 use File::Path 'mkpath';
-use DB_File ;
 
 # main処理
 eval {
@@ -29,29 +28,22 @@ eval {
     or die "File open error : $!";
 
   # 読み込みファイルオープン
-  my $obj1 = tie(my @array1, 'Tie::File', $file1, memory => 4_000_000) # 読み込みキャッシュ変更
+  my $obj1 = tie(my @array1, 'Tie::File', $file1, memory => 10_000_000) # 読み込みキャッシュ変更
     or die "File tie error : $!";
 
-  my $obj2 = tie(my @array2, 'Tie::File', $file2, memory => 4_000_000) # 読み込みキャッシュ変更
+  my $obj2 = tie(my @array2, 'Tie::File', $file2, memory => 10_000_000) # 読み込みキャッシュ変更
     or die "File tie error : $!";
-
-  # 内部表用のデータベースをオープン
-  # my %hash;
-  # my $store_dir = "$FindBin::Bin/../tmp/tmp$$";
-  # my $store_file = "${store_dir}/hash_db";
-  # mkpath $store_dir unless -d $store_dir;
-  # tie %hash, 'DB_File', $store_file, O_CREAT|O_RDWR, 0644, $DB_HASH 
-  #   or die "Cannot open $store_file: $!\n";
 
   # 読み込みファイルの行数
   my $row_size2 = scalar(@array2) - 1;
   my $row_size1 = scalar(@array1) - 1;
 
   # 1回で比較する行のバッチサイズ
-  my $batch_size = 2_000_000;
+  my $batch_size = 500_000;
 
   # 余白サイズ
-  my $safe_space = 500;
+  my $safe_space2 = 500;
+  my $safe_space1 = $safe_space2 * 2;
 
   # 走査ポインタ(内部表用) ※0が1行目！
   my $row_begin2 = 0;
@@ -119,10 +111,10 @@ eval {
     # 完了してないなら、次のチェックに向けてポインタをセット
     # チェック漏れを防ぐため、余白サイズを引いた行番号から再度走査する
     undef %hash; # 内部表をクリア
-    $row_begin2 = $row_end2 - $safe_space;
+    $row_begin2 = $row_end2 - $safe_space2;
     $row_end2  += $batch_size;
 
-    $row_begin1 = $row_end1 - $safe_space - 500;
+    $row_begin1 = $row_end1 - $safe_space1;
     $row_end1  += $batch_size;
   }
 
@@ -147,83 +139,3 @@ eval {
  }
  
  __END__
-
-  # 読み込みファイルオープン
-  open my $fh1, "<", $file1
-    or die "File open error : $!";
-  # binmode $fh1;
-
-  # 検索用ハッシュへ片方のファイルを取り込み
-  my %seek = ();
-
-  open my $fh2, "<", $file2
-    or die "File open error : $!";
-  
-  while (my $line2 = readline $fh2) {
-    chomp $line2;
-    my ($id2, $email2, $smtp2, $datetime2, $login_name2) = split /,/, $line2, 5;
-    $seek{$login_name2} = $line2;
-  }
-  close $fh2;
-
-  while (my $line1 = readline $fh1) {
-
-    chomp $line1;
-    my ($id1, $email1, $smtp1, $datetime1, $login_name1) = split /,/, $line1, 5;
-
-    if (exists $seek{$login_name1}) {
-      print $o_fh $line1 . "\n";
-      print $o_fh $seek{$login_name1} . "\n";
-      print $o_fh "---------------------\n";
-      print "match file record\n";
-    }
-  }
-  close $fh1;
-
-  # 書き込みファイルクローズ
-  close $o_fh;
-
-
-
-    # $seek->{$login_name1} = $.;
-    # $seek->{$login_name1} = [$offset, $byte];
-
-    # 次の行の位置までオフセットを移動
-    # $offset += $byte;
-
-    # print "login -> ${login_name1}, offset -> ${offset}, byte -> ${byte}\n";
-
-# use open qw/:utf8/;
-# use File::Slurp;
-
-# my @text = read_file($file1);
-
-
-  # print Dumper $seek;
-
-  #  while (my $line1 = readline $fh1) {
-
-  #   chomp $line1;
-  #   open my $fh2, "<", $file2
-  #     or die "File open error : $!";
- 
-  #   while (my $line2 = readline $fh2) {
-
-  #     chomp $line2;
-  #     my ($id1, $email1, $smtp1, $datetime1, $login_name1) = split /,/, $line1;
-  #     my ($id2, $email2, $smtp2, $datetime2, $login_name2) = split /,/, $line2;
-
-  #     # ログイン文字列が完全一致した行を出力
-  #     if ($login_name1 eq $login_name2) {
-  #       print $o_fh $line1 . "\n";
-  #       print $o_fh $line2 . "\n";
-  #       print $o_fh "---------------------\n";
-  #       last;
-  #     }
-  #   }
-  #   close $fh2;
-  # }
-  # close $fh1;
-
-
-
