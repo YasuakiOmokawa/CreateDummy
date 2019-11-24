@@ -20,19 +20,20 @@ sub new {
     email => CreateDummy::Email->new(number => $params{number}),
     smtp => CreateDummy::SMTPResCode->new,
     datetime => CreateDummy::Datetime->new,
-    login_name => CreateDummy::LoginId->new,
+    login_name => CreateDummy::LoginId->new(number => $params{number}),
     answer => CreateDummy::Answer->new,
   }, $class;
 }
 
-sub setup {
+sub create {
   my ($self) = @_;
 
   # 一意なデータを生成
   $self->{email}->create;
+  $self->{login_name}->create;
 }
 
-sub create {
+sub get {
   my ($self) = @_;
 
   my @csv_data = (
@@ -46,7 +47,9 @@ sub create {
 
   $self->{id}++;
 
-  return join(",", @csv_data) . "\n";
+  my $record = join(",", @csv_data);
+  print "data record -> $record\n";
+  return $record . "\n";
 }
 
 1;
