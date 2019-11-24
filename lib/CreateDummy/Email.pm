@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use utf8;
 
+use Carp 'croak';
+use FindBin;
+use File::Path 'mkpath';
 use String::Random;
 
 sub new {
@@ -11,7 +14,6 @@ sub new {
   bless {
     number => $params{number},
     domains => {},
-    addresses => {},
     sr => String::Random->new(),
   }, $class;
 }
@@ -20,30 +22,52 @@ sub create {
   my ($self) = @_;
 
   $self->_setup_domains;
+  $self->_setup_addresses
 }
 
 sub get {
   my ($self) = @_;
 
-  #  英小文字8 ~ 12桁の重複なしランダム文字列を生成
-  my $str = $self->{sr}->randregex('[a-z]{8,12}');
+  while (my $line = readline $self->{fh}) {
+    chomp $line;
+    return $line;
+  };
+}
 
-  while(1) {
-    my ($k, $v) = each %{$self->{domains}};
+sub _setup_addresses {
+  my ($self) = @_;
 
-    if ($k) {
-      if ($v > 0) {
-        # ドメイン作成上限を一つ減らす
-        $self->{domains}{$k}--;
-        return $str . '@' . $k; # Emailアドレス
-      } else {
-        # 作成上限を超えたドメインは削除
-        delete $self->{domains}{$k};
-        next;
-      }
-      print "domain -> ${k}, number -> ${v}\n";
+  my $store_dir = "$FindBin::Bin/../tmp/tmp$$";
+  mkpath $store_dir unless -d $store_dir;
+
+  my $store_file = "${store_dir}/email.txt";
+  open my $fh, ">", $store_file
+    or croak "File open error : $!";
+
+
+  # 作成予定数の少ないアドレスの昇順から作成（最低作成数10を保証するため）
+  for my $k ( sort { $self->{domains}{$a} <=> $self->{domains}{$b} } keys %{$self->{domains}} ) {
+
+    for my $i (1..$self->{domains}{$k}) {
+
+      #  英小文字8 ~ 12桁のランダム文字列をもつEmailアドレス
+      my $email = $self->{sr}->randregex('[a-z]{8,12}') . '@' . $k;
+      print "email -> ${email}, limit values -> " . $self->{domains}{$k} . "\n";
+
+      print $fh $email . "\n";
     }
   }
+  close $fh;
+
+  my $uniq_file = "${store_file}.uniq";
+
+  my $cmd = "sort $store_file | uniq > $uniq_file";
+  system($cmd) == 0 or croak "Command Error $cmd : $!";
+
+  open my $fh_u, "<", $uniq_file
+    or croak "File open error : $!";
+  
+  $self->{fh} = $fh_u;
 }
 
 sub _setup_domains {
