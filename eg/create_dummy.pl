@@ -26,7 +26,7 @@ eval {
   my $counter = 0;
 
   # 作成したいファイルサイズ
-  my $limit_size = ARGV[0];
+  my $limit_size = $ARGV[0];
 
   # 作成予定行数。重複がいくつかあることを想定し、実際の行数より少し多めにする
   my $row_numbers = int($limit_size / 160);
