@@ -2,121 +2,75 @@ use strict;
 use warnings;
 use utf8;
 
-use Data::Dumper;
+# main処理
+eval {
+  my $start_time = time;
 
-# use CreateDummy::Email;
-# use CreateDummy::SMTPResCode;
-# use CreateDummy::Datetime;
-# use CreateDummy::LoginId;
-# use CreateDummy::Answer;
+  my $file = $ARGV[0];
 
-use CreateDummy;
+  # 読み込みファイルオープン
+  open my $fh, "<", $file
+    or die "File open error : $!";
 
-my $limit = 1024*1024*1024;
-my $row_numbers = int(($limit / 157) * 1.1);
-print "predicate data size -> " . $limit . "\n";
-print "predicate row numbers -> " . $row_numbers . "\n";
+  # 集計ハッシュ
+  my $summary = {};
 
-sleep 5;
+  # 読み込み
+  while (my $line = readline $fh) {
+    chomp $line;
 
-my $time1 = time;
+    my ($id, $email, $smtp, $datetime, $login_name) = split /,/, $line;
 
-my $dummy = CreateDummy->new(
-  number => $row_numbers,
-);
+    # email集計
+    if (exists $summary->{$email}) {
+      $summary->{$email}++;
+    } else {
+      $summary->{$email} = 1;
+    }
 
-$dummy->setup;
+    # login_name集計
+    if (exists $summary->{$login_name}) {
+      $summary->{$login_name}++;
+    } else {
+      $summary->{$login_name} = 1;
+    }
 
-my $size = 0;
-my $counter = 0;
-while ($limit > $size) {
-  my $str = $dummy->create;
-  print "data -> " . $str;
-  $size += length $str;
-  $counter++;
-}
+  }
 
-print "\n";
-print "predicted data size -> " . $limit . "\n";
-print "predicted row numbers -> " . $row_numbers . "\n";
-print "--------------------------\n";
-print "result data size -> " . $size . "\n";
-print "result row count -> " . $counter . "\n";
+  # 読み込みファイルクローズ
+  close $fh;
 
-my $time2 = time;
-my $process_time = $time2 - $time1;
-print "exec time -> " . $process_time . "\n";
-__END__
+  my $dir = "output";
+  my $o_file = "$dir/summary_$$.csv";
 
-for my $i (1..7_000_000) {
-  print "date -> ". $datetime->get . "\n";
-}
+  # ファイル存在チェック
+  if (-e "$o_file") {
+    die "$o_file is exist\n";
+  }
 
-# my $smtp = CreateDummy::SMTPResCode->new;
-# my $answer = CreateDummy::Answer->new;
-my $login = CreateDummy::LoginId->new(
-  number => 7000000,
-);
-my $time1 = time;
+  # 書き込みファイルオープン
+  open my $o_fh, ">", $o_file
+    or die "File open error : $!";
 
-$login->create;
+  # 値の降順ソートで書き込み
+  for my $k (reverse sort { %$summary{$a} <=> %$summary{$b} } keys %$summary) {
+    my $out = $k . ',' . $summary->{$k} . "\n";
+    print $o_fh $out;
+  }
 
-my $nums = keys %{$login->{ids}};
-print "nums -> " . $nums . "\n";
+  # 書き込みファイルクローズ
+  close $fh;
 
-print "id -> " . $login->get . "\n";
-$nums = keys %{$login->{ids}};
-print "nums -> " . $nums . "\n";
+  # 実行時間出力
+  my $end_time = time;
+  my $process_time = $end_time - $start_time;
+  print "process time: ${process_time}\n";
 
-print "id -> " . $login->get . "\n";
-$nums = keys %{$login->{ids}};
-print "nums -> " . $nums . "\n";
+  # 出力ファイル名
+  print "Output file -> $o_file\n";
 
-my $time2 = time;
-my $process_time = $time2 - $time1;
-print "exec time -> " . $process_time . "\n";
-
-
-# my $smtp = CreateDummy::SMTPResCode->new;
-my $answer = CreateDummy::Answer->new;
-my $time1 = time;
-for my $i (1..100000) {
-  $answer->get;
-  # print "answer -> " . $answer->get . "\n";
-  # print "smtp code -> " . $smtp->get . "\n";
-}
-my $time2 = time;
-my $process_time = $time2 - $time1;
-print "exec time -> " . $process_time . "\n";
-
-use CreateDummy::CreateEmail;
-
-my $email = CreateDummy::CreateEmail->new(
-  number => 1_000,
-  # number => 7_000_000,
-);
-$email->_setup_domains;
-# print Dumper $email->{domains};
-
-my $all_nums = 0;
-for my $k (keys %{$email->{domains}}) {
-  # print "domain ${k} is valid limit number\n" if $email->{domains}{$k} >= 10;
-  $all_nums += $email->{domains}{$k};
-};
-print "all domains number -> ${all_nums}\n";
-
-$email->_setup_addresses;
-# for my $k (keys %{$email->{addresses}}) {
-my $num = keys %{$email->{addresses}};
-# print Dumper $email->{addresses};
-print "all addresses number -> ${num}\n";
-
-my $a = $email->get;
-print "get email -> $a\n";
-my $num = keys %{$email->{addresses}};
-print "2nd addresses number -> ${num}\n";
-
-my $a = $email->get;
-print "get email -> $a\n";
-my $num = keys %{$email->{addresses}};
-print "3rd addresses number -> ${num}\n";
+ };
+ if($@) {
+   print "Error: $@\n";
+ }
+ 
