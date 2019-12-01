@@ -3,12 +3,6 @@ use strict;
 use warnings;
 use utf8;
 
-use CDB_File;
-use Carp 'croak';
-use FindBin;
-use File::Path 'mkpath';
-use Fcntl;
-
 sub new {
   my ($class) = @_;
 

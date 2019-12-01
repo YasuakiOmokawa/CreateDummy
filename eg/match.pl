@@ -5,6 +5,7 @@ use utf8;
 use Tie::File;
 use FindBin;
 use File::Path 'mkpath';
+use Match::InnerTable;
 
 # main処理
 eval {
@@ -49,13 +50,11 @@ eval {
   @dic{('a' .. 'z')} = (0..25);
   my $dic_index;
 
-  # 内部表
-  my %inner = ();
-
   # a-zの数だけ繰り返し
   for my $i_dic (sort keys %dic) {
 
     # 内部表作成
+    my $inner_table = Match::InnerTable->new;
     for my $i2 ($track_index2..$row_size2) {
 
       my $line2 = $obj2->FETCH($i2);
@@ -67,7 +66,7 @@ eval {
       };
 
       # データ挿入
-      $inner{$login_id2} = $i2;
+      $inner_table->insert(key => $login_id2, value => $i2);
     }
 
     # 駆動表と突き合わせ
@@ -82,12 +81,13 @@ eval {
       };
 
       # 突き合わせ
-      if (exists $inner{$login_id1}) {
+      my $v = $inner_table->get($login_id1);
+      if ($v) {
 
         print "match. row1 -> $id1, login id -> $login_id1\n";
 
         print $o_fh "file1," . $line1 . "\n";
-        print $o_fh "file2," . $obj2->FETCH($inner{$login_id1}) . "\n";
+        print $o_fh "file2," . $obj2->FETCH($v) . "\n";
 
         $counter++;
       }
