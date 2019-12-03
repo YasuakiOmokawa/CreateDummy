@@ -45,7 +45,7 @@ eval {
   # マッチした行の数
   my $counter = 0;
 
-  # a-zインデックス
+  # a-zの辞書
   my %dic = ();
   @dic{('a' .. 'z')} = (0..25);
   my $dic_index;
@@ -113,5 +113,5 @@ eval {
  if($@) {
    print "Error: $@\n";
  }
- 
+
  __END__
