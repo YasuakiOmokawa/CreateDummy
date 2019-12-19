@@ -45,14 +45,14 @@ eval {
   open my $o_fh, ">", $o_file
     or die "File open error : $!";
 
-  # 値の降順ソートで書き込み 上位100件まで
+  # 値の降順ソートで書き込み 上位10件まで
   my $limit = 1;
   for my $k (reverse sort { %$summary{$a} <=> %$summary{$b} } keys %$summary) {
     my $out = $k . ',' . $summary->{$k} . "\n";
     print $o_fh $out;
 
     $limit++;
-    last if $limit >= 100;
+    last if $limit >= 10;
   }
 
   # 書き込みファイルクローズ
@@ -70,4 +70,3 @@ eval {
  if($@) {
    print "Error: $@\n";
  }
- 
