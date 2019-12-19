@@ -66,7 +66,7 @@ sub _setup_addresses {
 
   open my $fh_u, "<", $uniq_file
     or croak "File open error : $!";
-  
+
   $self->{fh} = $fh_u;
 }
 
@@ -76,9 +76,9 @@ sub _setup_domains {
   my $n = $self->{number};
 
   # ドメイン別に、生成するアドレス数を格納
-  $self->{domains}{'ymir.co.jp'} = int($n * 0.3);
-  $self->{domains}{'cuenote.jp'} = int($n * 0.2);
-  $self->{domains}{'tripletail.jp'} = int($n * 0.1);
+  $self->{domains}{'main1.co.jp'} = int($n * 0.3);
+  $self->{domains}{'main2.jp'} = int($n * 0.2);
+  $self->{domains}{'main3.com'} = int($n * 0.1);
 
   # ランダム文字列のアドレスを生成
   my $limit = int($n * 0.4);
@@ -111,5 +111,3 @@ sub _setup_domains {
 
 1;
 __END__
-
-

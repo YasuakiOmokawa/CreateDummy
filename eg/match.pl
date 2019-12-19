@@ -5,6 +5,7 @@ use utf8;
 use Tie::File;
 use FindBin;
 use File::Path 'mkpath';
+use Match::InnerTable;
 
 # main処理
 eval {
@@ -34,86 +35,63 @@ eval {
     or die "File tie error : $!";
 
   # 読み込みファイルの行数
-  my $row_size2 = scalar(@array2) - 1;
   my $row_size1 = scalar(@array1) - 1;
+  my $row_size2 = scalar(@array2) - 1;
 
-  # 1回で比較する行のバッチサイズ
-  my $batch_size = 500_000;
-
-  # 余白サイズ
-  my $safe_space2 = 100;
-  my $safe_space1 = $safe_space2 * 2;
-
-  # 走査ポインタ(内部表用) ※0が1行目！
-  my $row_begin2 = 0;
-  my $row_end2   = $batch_size;
-
-  # 走査ポインタ(駆動表用) ※0が1行目！
-  my $row_begin1 = 0;
-  my $row_end1   = $batch_size;
-
-  # チェック完了フラグ
-  my $done_2 = 0;
-  my $done_1 = 0;
+  # 追跡インデックス ※0が1行目！
+  my $track_index1 = 0;
+  my $track_index2 = 0;
 
   # マッチした行の数
   my $counter = 0;
 
-  # チェック開始
-  while(1) {
+  # a-zの辞書
+  my %dic = ();
+  @dic{('a' .. 'z')} = (0..25);
+  my $dic_index;
 
-    # 内部表を宣言
-    my %hash;
+  # a-zの数だけ繰り返し
+  for my $i_dic (sort keys %dic) {
 
-    # 内部表である2のデータベースを作成
-    for my $i ($row_begin2..$row_end2) {
+    # 内部表作成
+    my $inner_table = Match::InnerTable->new;
+    for my $i2 ($track_index2..$row_size2) {
 
-      my $line2 = $obj2->FETCH($i);
-      chomp $line2;
-      my ($id, $email, $smtp, $datetime, $login_id2) = split /,/, $line2;
+      my $line2 = $obj2->FETCH($i2);
+      my ($id2, $email, $smtp, $datetime, $login_id2) = split /,/, $line2;
 
-      $hash{$login_id2} = $i;
-      print "inner table setup, now row num -> $i\n";
-
-      # ファイルの行数を超えたらループを抜ける
-      if ($i >= $row_size2) {
-        $done_2 = 1;
+      if (index($login_id2, $i_dic) != 0) {
+        $track_index2 = $i2 + 1;
         last;
-      }
+      };
+
+      # データ挿入
+      $inner_table->insert(key => $login_id2, value => $i2);
     }
 
-    # 駆動表である1でチェック
-    for my $i ($row_begin1..$row_end1) {
+    # 駆動表と突き合わせ
+    for my $i1 ($track_index1..$row_size1) {
 
-      my $line1 = $obj1->FETCH($i);
-      my ($id, $email, $smtp, $datetime, $login_id1) = split /,/, $line1;
+      my $line1 = $obj1->FETCH($i1);
+      my ($id1, $email, $smtp, $datetime, $login_id1) = split /,/, $line1;
 
-      # 一致したら書きだす
-      if (exists $hash{$login_id1}) {
+      if (index($login_id1, $i_dic) != 0) {
+        $track_index1 = $i1 + 1;
+        last;
+      };
+
+      # 突き合わせ
+      my $v = $inner_table->get($login_id1);
+      if ($v) {
+
+        print "match. row1 -> $id1, login id -> $login_id1\n";
+
         print $o_fh "file1," . $line1 . "\n";
-        print $o_fh "file2," . $obj2->FETCH($hash{$login_id1}) . "\n";
-        print "match record number -> ${i}, login id -> $login_id1\n";
+        print $o_fh "file2," . $obj2->FETCH($v) . "\n";
+
         $counter++;
       }
-
-      # ファイルの行数を超えたらループを抜ける
-      if ($i >= $row_size1) {
-        $done_1 = 1;
-        last;
-      }
     }
-
-    # どちらのファイルもチェック完了すれば終了
-    last if $done_1 && $done_2;
-
-    # 完了してないなら、次のチェックに向けてポインタをセット
-    # チェック漏れを防ぐため、余白サイズを引いた行番号から再度走査する
-    undef %hash; # 内部表をクリア
-    $row_begin2 = $row_end2 - $safe_space2;
-    $row_end2  += $batch_size;
-
-    $row_begin1 = $row_end1 - $safe_space1;
-    $row_end1  += $batch_size;
   }
 
   # クローズ
@@ -135,5 +113,5 @@ eval {
  if($@) {
    print "Error: $@\n";
  }
- 
+
  __END__
